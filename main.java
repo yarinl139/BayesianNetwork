@@ -25,6 +25,22 @@ public class main {
 		}
 		return null;
 	}
+	public static boolean isOutcome(Variable vb , String st)
+	{
+		if(vb==null)
+			return false;
+		for (int i = 0; i < vb.getOptions(); i++) {
+			if(vb.outcomes[i].equals(st))
+				return true;
+		}
+		return false;
+	}
+	public static boolean isName(ArrayList<Variable> variables, String str)
+	{
+		if(getVariable(variables,str)!=null)
+			return true;
+		return false;
+	}
 	public static CPT getCPT(ArrayList<CPT> bayesian_network , String variable_name) //returns a CPT object in the ArrayList of the CPT's
 	{
 		int index = 0 ;
@@ -37,26 +53,58 @@ public class main {
 		return null;
 	}
 
-	public static int[] SIMPLE_CONCLUSION(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network) { // Using simple conclusion algorithm
+	public static double[] SimpleConclusion(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network) { // Using simple conclusion algorithm
 		Variable query = null;;
 		ArrayList<Variable> evidence = new ArrayList<>();
 		ArrayList<Variable> hidden = new ArrayList<>();
-
+		String save_query = "";
 		int flag_divider = 0; //divides the string at char '|'
-		for (int i = 0; i < str.length() && str.charAt(i)!= '|'; i++) { //for to get the query parameter
-			if(str.charAt(i) == '=')
-			{
-				query = getVariable(variables,Character.toString(str.charAt(i-1)));
-				query.setCurrentOutcome(Character.toString(str.charAt(i+1)));
+		String name = "";
+		String outcome = "";
+		for (int i = 0; i < str.length() && str.charAt(i) != '|'; ++i) { //for to get the query parameter
+			if(str.charAt(i)!='P' && str.charAt(i)!='(' && str.charAt(i)!=')' && str.charAt(i)!=',' && str.charAt(i)!= '=')
+			{	
+				name+=str.charAt(i);
+				outcome += str.charAt(i);
 			}
-			flag_divider = i;
-		}
-		for (int i = flag_divider; i < str.length(); i++) { //for to get the evidence parameters
-			if(str.charAt(i) == '=')
+			if(isName(variables,name))
 			{
-				Variable recieved = getVariable(variables, Character.toString(str.charAt(i-1)));
-				recieved.setCurrentOutcome(Character.toString(str.charAt(i+1)));
-				evidence.add(recieved);
+				query = getVariable(variables,name);
+				outcome = "";
+				name = "";
+			}
+			if(isOutcome(query,outcome))
+			{
+				save_query = outcome;
+				name = "";
+				outcome = "";
+			}
+
+			flag_divider = i;
+
+		}
+		flag_divider++;
+		name = "";
+		outcome = "";
+		Variable vb = null ;
+		for (int i = flag_divider+1; i < str.length(); i++) { //for to get the evidence parameters
+			if(str.charAt(i)!='P' && str.charAt(i)!='(' && str.charAt(i)!=')' && str.charAt(i)!=',' && str.charAt(i)!= '=')
+			{	
+				name+=str.charAt(i);
+				outcome += str.charAt(i);
+			}
+			if(isName(variables,name))
+			{
+				vb = getVariable(variables,name);
+				evidence.add(vb);
+				outcome = "";
+				name = "";
+			}
+			if(isOutcome(query,outcome))
+			{
+				vb.setCurrentOutcome(outcome);
+				name = "";
+				outcome = "";
 			}
 		}
 		ArrayList<Variable> query_evidence = new ArrayList<>(); //an ArrayList for the query and the evidence parameters
@@ -82,14 +130,65 @@ public class main {
 		hidden_ln = hidden_ln.getNext();
 		String [][] every_option_hidden = new String [options][hidden.size()];
 		CPT hidden_truth_table = new CPT(every_option_hidden,hidden_ln);
-		hidden_truth_table.printTruthTable();
-		
 
-		return null;
+		double [] arr = new double [3];//arr[0] will hold the answer, arr[1] will hold the number of additions ,arr[2] will hold the number of multiplications
+		arr[1]=0;
+		arr[2]=0;
+		double result;
+		double sum = 0;
+		double total =0;
+		int count_additions = 0;
+		int index = 0;
+
+		for(int k=0;k<query.getOptions();k++)
+		{
+			query.setCurrentOutcome(query.outcomes[k]);
+			for (int i = 0; i < every_option_hidden.length; i++) {
+				index = 0 ;
+				for (int j = 0; j < every_option_hidden[0].length; j++) {
+					hidden.get(index).setCurrentOutcome(every_option_hidden[i][j]);
+					index++;
+				}
+				result = Calculate(arr,query,evidence,hidden,variables,bayesian_network);
+				if(query.current_outcome.equals(save_query))
+				{
+					sum+=result;
+				}
+				total+=result;
+				count_additions++;
+				arr[0]++;
+			}
+		}
+		
+		arr [0] = sum/total;
+		arr[1] = count_additions-1;
+
+		return arr;
 	}
-	public static int Calculate(ArrayList<Variable> variables,ArrayList<String> query_outcomes,ArrayList<String> evidence_outcomes,ArrayList<CPT> bayesian_network ,Variable query, ArrayList<Variable> evidence,ArrayList<Variable> hidden)
+	public static double Calculate(double []arr, Variable query, ArrayList<Variable> evidence, ArrayList<Variable> hidden ,ArrayList<Variable> variables,ArrayList<CPT> bayesian_network)
 	{
-		return 0;
+		ArrayList<String> outcomes;
+		double result=1;
+		for (int i = 0; i < variables.size(); i++) {
+			Linked_List<Variable> parents = getCPT(bayesian_network, variables.get(i).getName()).given;
+			Linked_List<Variable> p = parents;
+			outcomes = new ArrayList<String>();
+			if(parents!=null)
+			{
+				while(p!=null)
+				{
+					outcomes.add(p.getValue().current_outcome);
+					p=p.getNext();
+				}
+			}
+			else
+				outcomes.add(variables.get(i).current_outcome);
+			arr[2]++;
+			result*=getCPT(bayesian_network,variables.get(i).getName()).getProbabilityByOutcomes(outcomes);
+			
+		}
+		arr[2]--;
+		return result;
 	}
 
 
@@ -201,7 +300,6 @@ public class main {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-
 		System.out.println(bayesian_network);
 
 		for (Iterator iterator = bayesian_network.iterator(); iterator.hasNext();) {
@@ -212,19 +310,14 @@ public class main {
 		}
 		System.out.println(queries.getValue());
 
-		/*
-		for (Iterator iterator = variables.iterator(); iterator.hasNext();) {
-			Variable vb = (Variable) iterator.next();
-			System.out.println(vb);
-
-		}
-		 */
 		Linked_List<String> queries_iterator = queries;
 		while(queries_iterator!=null)
 		{
 			char desirable_func = queries_iterator.getValue().charAt(queries_iterator.getValue().length()-1);
 			if(desirable_func == '1')
-				SIMPLE_CONCLUSION(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
+			{
+				SimpleConclusion(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
+			}
 			queries_iterator = queries_iterator.getNext();
 		}
 	}

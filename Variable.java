@@ -47,7 +47,7 @@ public class Variable {
 		for (int i = 0; i < outcomes.length; i++) {
 			st+=outcomes[i] + " ";
 		}
-		return "name: " + this.name + " options: " + this.options + " outcomes: "+ st;
+		return "name: " + this.name + " options: " + this.options + " current outcome: "+ this.current_outcome;
 	}
 	public void setCurrentOutcome(String s)
 	{

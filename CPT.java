@@ -28,7 +28,7 @@ public class CPT {
 			p=p.getNext();
 		Linked_List<Variable> m = p.getNext();
 		p.setNext(null);
-	     generate_truth_table(m.getValue(), given, this.table);
+		generate_truth_table(m.getValue(), given, this.table);
 	}
 	public CPT(Variable x, Linked_List<Variable> given ,String str_prob)
 	{
@@ -115,13 +115,13 @@ public class CPT {
 		for (int i = 0; i <= result.length-1; i++) {
 			if(index<arr.length)
 			{
-			arr[index] = Double.parseDouble(result[i]);
-			index++;
+				arr[index] = Double.parseDouble(result[i]);
+				index++;
 			}
 		}
-	
+
 	}
-	
+
 	public void printTruthTable()
 	{
 		for (int i = 0; i < this.table.length; i++) {
@@ -141,18 +141,21 @@ public class CPT {
 		int index;
 		for (int i = 0; i < this.table.length; i++) {
 			index = 0;
-			for (int j = 0; j < this.table[0].length; j++) {
-				while(index<outcomes.size())
+			for (int j = 0; j < this.table[0].length;j++) {
+				
+				if(this.table[i][j].equals(outcomes.get(index)))
 				{
-					if(this.table[i][j].equals(outcomes.get(index)))
-					{
-						index++;
-					}
+					index++;
 				}
+
 				if(index == outcomes.size())
 					return this.probabilities[i];
 			}
 		}
 		return -1;
+	}
+	public boolean hasParents()
+	{
+		return given==null;
 	}
 }
