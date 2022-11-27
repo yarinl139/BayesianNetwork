@@ -61,8 +61,8 @@ public class main {
 		int flag_divider = 0; //divides the string at char '|'
 		String name = "";
 		String outcome = "";
-		for (int i = 0; i < str.length() && str.charAt(i) != '|'; ++i) { //for to get the query parameter
-			if(str.charAt(i)!='P' && str.charAt(i)!='(' && str.charAt(i)!=')' && str.charAt(i)!=',' && str.charAt(i)!= '=')
+		for (int i = 1; i < str.length() && str.charAt(i) != '|'; ++i) { //for to get the query parameter
+			if(str.charAt(i)!='(' && str.charAt(i)!=')' && str.charAt(i)!=',' && str.charAt(i)!= '=')
 			{	
 				name+=str.charAt(i);
 				outcome += str.charAt(i);
@@ -88,7 +88,7 @@ public class main {
 		outcome = "";
 		Variable vb = null ;
 		for (int i = flag_divider+1; i < str.length(); i++) { //for to get the evidence parameters
-			if(str.charAt(i)!='P' && str.charAt(i)!='(' && str.charAt(i)!=')' && str.charAt(i)!=',' && str.charAt(i)!= '=')
+			if(str.charAt(i)!='(' && str.charAt(i)!=')' && str.charAt(i)!=',' && str.charAt(i)!= '=')
 			{	
 				name+=str.charAt(i);
 				outcome += str.charAt(i);
@@ -130,7 +130,7 @@ public class main {
 		hidden_ln = hidden_ln.getNext();
 		String [][] every_option_hidden = new String [options][hidden.size()];
 		CPT hidden_truth_table = new CPT(every_option_hidden,hidden_ln);
-
+		
 		double [] arr = new double [3];//arr[0] will hold the answer, arr[1] will hold the number of additions ,arr[2] will hold the number of multiplications
 		arr[1]=0;
 		arr[2]=0;
@@ -311,14 +311,27 @@ public class main {
 		System.out.println(queries.getValue());
 
 		Linked_List<String> queries_iterator = queries;
+		try {
+		File new_file = new File("output.txt");
+		new_file.createNewFile();
+		FileWriter fw = new FileWriter("output.txt");
+		double []arr;
 		while(queries_iterator!=null)
 		{
 			char desirable_func = queries_iterator.getValue().charAt(queries_iterator.getValue().length()-1);
 			if(desirable_func == '1')
 			{
-				SimpleConclusion(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
+				arr = SimpleConclusion(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
+				fw.write(arr[0] + "," + (int)arr[1] + "," + (int)arr[2] + "\n");
 			}
 			queries_iterator = queries_iterator.getNext();
+			
+		}
+		fw.close();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
 		}
 	}
 
