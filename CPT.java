@@ -23,12 +23,19 @@ public class CPT {
 	public CPT(String [][]truth, Linked_List<Variable> given)
 	{
 		this.table = truth;
+		if(given.getNext()==null)
+		{
+			generate_truth_table_for_single(given.getValue(), truth);
+		}
+		else {
+		this.table = truth;
 		Linked_List<Variable> p = given;
 		while(p.getNext().getNext()!=null)
 			p=p.getNext();
 		Linked_List<Variable> m = p.getNext();
 		p.setNext(null);
 		generate_truth_table(m.getValue(), given, this.table);
+		}
 	}
 	public CPT(Variable x, Linked_List<Variable> given ,String str_prob)
 	{
@@ -52,6 +59,12 @@ public class CPT {
 			this.generate_probabilites_array(probabilities, str_prob);
 		}
 
+	}
+	public void generate_truth_table_for_single(Variable k , String[][]table)
+	{
+		for (int i = 0; i < k.outcomes.length; i++) {
+			this.table [i][0] =  k.outcomes[i];
+		}
 	}
 	public  void generate_truth_table(Variable x , Linked_List<Variable> given , String table[][])
 	{
@@ -142,7 +155,7 @@ public class CPT {
 		for (int i = 0; i < this.table.length; i++) {
 			index = 0;
 			for (int j = 0; j < this.table[0].length;j++) {
-				
+
 				if(this.table[i][j].equals(outcomes.get(index)))
 				{
 					index++;
@@ -154,6 +167,27 @@ public class CPT {
 		}
 		return -1;
 	}
+	public double getThisVariableProb()
+	{
+		ArrayList<String> arr = new ArrayList<String>();
+		Linked_List<Variable> p = this.given;
+		if(p!=null)
+		{
+			while(p!=null)
+			{
+				arr.add(p.getValue().current_outcome);
+				p=p.getNext();
+			}
+		}
+		else
+			arr.add(x.current_outcome);
+
+
+			return getProbabilityByOutcomes(arr);
+	}
+
+
+
 	public boolean hasParents()
 	{
 		return given==null;
