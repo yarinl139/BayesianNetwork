@@ -118,7 +118,7 @@ public class main {
 		//arr[0] will hold the answer, arr[1] will hold the number of additions ,arr[2] will hold the number of multiplications
 		double [] arr = new double [3];
 
-		//saving the query's parent to check if the evidence is equal to the parents, so we can just get the prom from the CPT with no calculation
+		//saving the query's parent to check if the evidence is equal to the parents, so we can get the probability from the CPT with no calculation
 		Linked_List<Variable> query_parents = getCPT(bayesian_network,query.getName()).given;
 		Linked_List<Variable> p = query_parents;
 		ArrayList<Variable> query_parents_al = new ArrayList<Variable>();
@@ -133,73 +133,92 @@ public class main {
 
 		//Declaring an ArrayList for the query and the evidence parameters
 		//to check which of the parameters are missing and add them to the hidden ArrayList.
-		ArrayList<Variable> query_evidence = new ArrayList<>();
-		query_evidence.add(query);                              
+		ArrayList<Variable> query_evidence = new ArrayList<>();                             
 		for (int i = 0; i < evidence.size(); i++) {
 			query_evidence.add(evidence.get(i));
 		}
+		query_evidence.add(query); 
 		for (int i = 0; i < variables.size(); i++) {
 			if(!(query_evidence.contains(variables.get(i))))
 			{
 				hidden.add(variables.get(i));
 			}
 		}
-		//****from this line of code i have the hidden variables stored in an ArrayList
-		if(evidence.equals(query_parents_al))
+		if(hidden.isEmpty()) //checking if there are no hidden variables, using the P(A,B)/P(B) forumla
 		{
-			arr[0] = getCPT(bayesian_network,query.getName()).getThisVariableProb();
+			double top = Calculate(arr,null,null,null,query_parents_al,bayesian_network);
+			double sum = 0;
+			int count_additions = 0;
+			for (int i = 0; i < query.getOptions(); i++) {
+				query.setCurrentOutcome(query.outcomes[i]);
+				sum+=Calculate(arr,null,null,null,query_parents_al,bayesian_network);
+				count_additions++;
+			}
+			System.out.println(top/sum);
+			arr[0] = top/sum;
+			arr[1] = count_additions -1 ;
 			return arr;
 		}
-		else
-		{
-			//this piece of code's purpose is to get every hidden variable's outcome from the Generete_Truth_Table methon in class CPT
-			int options = 1;
-			Linked_List<Variable> hidden_ln = new Linked_List<Variable>(query);
-			p = hidden_ln;
-			for (int i = 0; i < hidden.size(); i++) {
-				options*=hidden.get(i).getOptions();
-				p.setNext(new Linked_List<Variable>(hidden.get(i)));
-				p=p.getNext();
-			}
-			hidden_ln = hidden_ln.getNext();
-			String [][] every_option_hidden = new String [options][hidden.size()];
-			CPT hidden_truth_table = new CPT(every_option_hidden,hidden_ln);
 
-
-			arr[1]=0;
-			arr[2]=0;
-			double result;
-			double sum = 0;
-			double total =0;
-			int count_additions = 0;
-			int index = 0;
-
-			//This is the actual algorithm we are iterating over all the possible outcomes of the hidden variables
-			//Also we are iterating on the query all possible outcomes for normalization
-			for(int k=0;k<query.getOptions();k++)
+		else {
+			//****from this line of code i have the hidden variables stored in an ArrayList
+			if(query_evidence.equals(query_parents_al))
 			{
-				query.setCurrentOutcome(query.outcomes[k]);
-				for (int i = 0; i < every_option_hidden.length; i++) {
-					index = 0 ;
-					for (int j = 0; j < every_option_hidden[0].length; j++) {
-						hidden.get(index).setCurrentOutcome(every_option_hidden[i][j]);
-						index++;
-					}
-					result = Calculate(arr,query,evidence,hidden,variables,bayesian_network); //using the Calculate function described below
-					if(query.current_outcome.equals(save_query)) //we are checking if the current query's outcome is equal to the save_query variable for before (for normalization)
-					{
-						sum+=result;
-					}
-					total+=result;
-					count_additions++;
-					arr[0]++;
-				}
+				arr[0] = getCPT(bayesian_network,query.getName()).getThisVariableProb();
+				System.out.println(arr[0]);
+				return arr;
 			}
-			System.out.println(sum/total);
-			arr [0] = sum/total; //normalizing sum with total
-			arr[1] = count_additions-1; //we need to decrease the number of additions in one
+			else
+			{
+				//this piece of code's purpose is to get every hidden variable's outcome from the Generete_Truth_Table methon in class CPT
+				int options = 1;
+				Linked_List<Variable> hidden_ln = new Linked_List<Variable>(query);
+				p = hidden_ln;
+				for (int i = 0; i < hidden.size(); i++) {
+					options*=hidden.get(i).getOptions();
+					p.setNext(new Linked_List<Variable>(hidden.get(i)));
+					p=p.getNext();
+				}
+				hidden_ln = hidden_ln.getNext();
+				String [][] every_option_hidden = new String [options][hidden.size()];
+				CPT hidden_truth_table = new CPT(every_option_hidden,hidden_ln);
 
-			return arr;
+
+				arr[1]=0;
+				arr[2]=0;
+				double result;
+				double sum = 0;
+				double total =0;
+				int count_additions = 0;
+				int index = 0;
+
+				//This is the actual algorithm we are iterating over all the possible outcomes of the hidden variables
+				//Also we are iterating on the query all possible outcomes for normalization
+				for(int k=0;k<query.getOptions();k++)
+				{
+					query.setCurrentOutcome(query.outcomes[k]);
+					for (int i = 0; i < every_option_hidden.length; i++) {
+						index = 0 ;
+						for (int j = 0; j < every_option_hidden[0].length; j++) {
+							hidden.get(index).setCurrentOutcome(every_option_hidden[i][j]);
+							index++;
+						}
+						result = Calculate(arr,query,evidence,hidden,variables,bayesian_network); //using the Calculate function described below
+						if(query.current_outcome.equals(save_query)) //we are checking if the current query's outcome is equal to the save_query variable for before (for normalization)
+						{
+							sum+=result;
+						}
+						total+=result;
+						count_additions++;
+						arr[0]++;
+					}
+				}
+				System.out.println(sum/total);
+				arr [0] = sum/total; //normalizing sum with total
+				arr[1] = count_additions-1; //we need to decrease the number of additions in one
+
+				return arr;
+			}
 		}
 	}
 
