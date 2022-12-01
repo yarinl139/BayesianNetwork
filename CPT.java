@@ -1,13 +1,39 @@
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class CPT {
-
+public class CPT implements Comparable{
+	
 	Variable x;
 	Linked_List<Variable> given;
 	String [][]table; //a general truth table including x
 	double [] probabilities; // a probability array
 	String str_prob;
+
+	public CPT()
+	{
+		this.x = null;
+		this.given = null;
+		this.table = null;
+		this.probabilities = null;
+		this.str_prob = null;
+	}
+	public CPT(CPT other) //deep copy of a CPT
+	{
+		this.x = new Variable(other.x);
+		this.given = other.given;
+		this.table = new String [other.table.length][other.table[0].length];
+		for (int i = 0; i < table.length; i++) {
+			for (int j = 0; j < table[0].length; j++) {
+				this.table[i] = other.table[i];
+			}
+		}
+		this.probabilities = new double [other.probabilities.length];
+		for (int i = 0; i < probabilities.length; i++) {
+			this.probabilities[i] = other.probabilities[i];
+		}
+		this.str_prob = other.str_prob;
+
+	}
 	public CPT(Variable x , String str_prob) //if x has no parents
 	{
 		this.x = x;
@@ -28,13 +54,13 @@ public class CPT {
 			generate_truth_table_for_single(given.getValue(), truth);
 		}
 		else {
-		this.table = truth;
-		Linked_List<Variable> p = given;
-		while(p.getNext().getNext()!=null)
-			p=p.getNext();
-		Linked_List<Variable> m = p.getNext();
-		p.setNext(null);
-		generate_truth_table(m.getValue(), given, this.table);
+			this.table = truth;
+			Linked_List<Variable> p = given;
+			while(p.getNext().getNext()!=null)
+				p=p.getNext();
+			Linked_List<Variable> m = p.getNext();
+			p.setNext(null);
+			generate_truth_table(m.getValue(), given, this.table);
 		}
 	}
 	public CPT(Variable x, Linked_List<Variable> given ,String str_prob)
@@ -137,6 +163,7 @@ public class CPT {
 
 	public void printTruthTable()
 	{
+		System.out.println("Query: " + this.x.getName() + " Parents: " + this.given);
 		for (int i = 0; i < this.table.length; i++) {
 			for (int j = 0; j < this.table[0].length; j++) {
 				System.out.print(this.table[i][j] + " ");
@@ -167,6 +194,22 @@ public class CPT {
 		}
 		return -1;
 	}
+	public int getNumOfVariables()
+	{
+		int sum=0;
+		if(this.given==null)
+			return 1;
+		else
+		{
+			Linked_List <Variable> p = given;
+			while(p!=null)
+			{
+				sum++;
+				p=p.getNext();
+			}
+		}
+		return sum;
+	}
 	public double getThisVariableProb()
 	{
 		ArrayList<String> arr = new ArrayList<String>();
@@ -183,13 +226,95 @@ public class CPT {
 			arr.add(x.current_outcome);
 
 
-			return getProbabilityByOutcomes(arr);
+		return getProbabilityByOutcomes(arr);
 	}
 
+	public int getCPTSize()
+	{
+		int sum = 1;
+		if(given==null)
+			return x.getOptions();
+		else
+		{
+			Linked_List <Variable> p = given;
+			while(p!=null)
+			{
+				sum*=p.getValue().getOptions();
+				p=p.getNext();
+			}
+		}
+		return sum;
+	}
+	public CPT Diminish() //local CPTS instantiated by evidence
+	{
+		double [] updated_probs = new double[this.getCPTSize()/this.x.getOptions()];
+		String [][] updated_table = new String [this.getCPTSize()/this.x.getOptions()][getNumOfVariables()-1];
+		Linked_List<Variable> parents = new Linked_List<Variable> (new Variable(x));
+		Linked_List<Variable> p = parents;
+		Linked_List<Variable> m = given;
+		while(m != null && m.getValue()!=this.x)
+		{
+			p.setNext(new Linked_List<Variable>(given.getValue()));
+			p=p.getNext();
+			m=m.getNext();
+		}
+		int index = 0;
+		parents = parents.getNext();
+		for (int i = 0; i < this.table.length; i++) {
+			if(table[i][this.table[0].length-1].equals(x.current_outcome))
+			{
+				if(index<updated_probs.length)
+				{
+					updated_probs[index] = this.probabilities[i];
+					index++;
+				}
+			}
+		}
+		if(parents == null) // if the factor became one valued, discard the factor
+			return null;
+
+		CPT diminished = new CPT(updated_table,parents);
+		diminished.probabilities = updated_probs;
+		diminished.given = parents;
+		return diminished;
 
 
+
+	}
+	public boolean inCPT(String name)
+	{
+		if(this.given == null)
+		{
+			if(this.x!=null)
+			{
+				if(this.x.getName().equals(name))
+					return true;
+			}
+				
+		}
+		else
+		{
+			Linked_List<Variable> p = this.given;
+			while(p!=null)
+			{
+				if(p.getValue().getName().equals(name))
+					return true;
+				p=p.getNext();
+			}
+		}
+		return false;
+	}	
 	public boolean hasParents()
 	{
 		return given==null;
+	}
+	@Override
+	public int compareTo(Object o) {
+		CPT c1 = (CPT)o;
+		if(this.getCPTSize()<c1.getCPTSize())
+			return -1;
+		else if (this.getCPTSize()>c1.getCPTSize())
+			return 1;
+		return 0;
 	}
 }

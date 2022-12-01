@@ -1,11 +1,34 @@
 import java.util.ArrayList;
+import java.util.Comparator;
 
-public class Variable {
+public class Variable implements Comparable {
 	private String name;
 	private int options;
 	public String[] outcomes;
 	public String current_outcome;
 	public int index = 0;
+
+	public Variable()
+	{
+		this.name = null;
+		this.options = 0;
+		this.outcomes= null;
+		this.current_outcome = null;
+		this.index = 0;
+	}
+	
+	
+	public Variable(Variable other)
+	{
+		this.name = other.getName();
+		this.options = other.getOptions();
+		this.outcomes = new String [other.outcomes.length];
+		for (int i = 0; i < outcomes.length; i++) {
+			this.outcomes[i] = other.outcomes[i];
+		}
+		this.current_outcome = other.current_outcome;
+		this.index = other.index;
+	}
 	
 	public Variable(String name, int options)
 	{
@@ -23,7 +46,7 @@ public class Variable {
 			this.outcomes[index] = outcomes.get(index);
 			index++;
 		}
-		
+
 	}
 	public String getName() {
 		return name;
@@ -53,4 +76,17 @@ public class Variable {
 	{
 		this.current_outcome = s;
 	}
+
+	@Override
+	public int compareTo(Object o) {
+		
+		Variable v1 = (Variable)o;
+		return this.getName().compareTo(v1.getName());
+	}
+
+
+
+
+
+
 }

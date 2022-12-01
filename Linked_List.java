@@ -25,14 +25,16 @@ public class Linked_List<T> {
 	public void setNext(Linked_List<T> next) {
 		this.next = next;
 	}
-	public void printList()
+	public String toString()
 	{
+		String st = "";
 		Linked_List<T> p = this;
 		while(p!=null)
 		{
-			System.out.print(p.value + "==>");
+			st += p.value + "==>";
 			p=p.getNext();
 		}
+		return st;
 	}
 	
 }
