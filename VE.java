@@ -140,46 +140,117 @@ public class VE {
 	}
 	public static CPT join(ArrayList<CPT> factors)
 	{
+		CPT res = factors.get(0);
+		for (int i = 1; i < factors.size(); i++) {
+
+			res = joinTwoFactors(res,factors.get(i));
+		}
+
+		return res;
+
+
+
+
+		//		ArrayList<Variable> union = new ArrayList<Variable>();
+		//		Linked_List<Variable> union_ln = new Linked_List<>(new Variable());
+		//		Linked_List<Variable> q = union_ln;
+		//		int sum = 1;
+		//		for (int i = 0; i < factors.size(); i++) {
+		//			Linked_List<Variable> p = factors.get(i).given;
+		//			if(p==null && factors.get(i).x!=null)
+		//			{
+		//				union.add(factors.get(i).x);
+		//				q.setNext(new Linked_List<Variable>(union.get(i)));
+		//				q=q.getNext();
+		//				sum*=union.get(i).getOptions();
+		//			}
+		//			else
+		//			{
+		//				while(p!=null)
+		//				{
+		//					if(!union.contains(p.getValue())) {
+		//						union.add(p.getValue());
+		//						q.setNext(new Linked_List<Variable>(p.getValue()));
+		//						q=q.getNext();
+		//						sum*=p.getValue().getOptions();
+		//					}
+		//					p=p.getNext();
+		//				}
+		//			}
+		//		}
+		//		union_ln = union_ln.getNext();
+		//		String [][]truth_table = new String [sum][union.size()];
+		//		CPT joined = new CPT(truth_table,union_ln);
+		//		joined.given = union_ln;
+		//		
+		//		
+		//		
+		//		
+		//		
+		//		
+		//		return null;
+	}
+	private static boolean AlreadyExists(Linked_List<Variable> list,Variable other)
+	{
+		Linked_List<Variable> p = list;
+		while(p!=null)
+		{
+			if(p.getValue() == other)
+				return true;
+			p=p.getNext();
+		}
+		return false;
+	}
+	private static CPT joinTwoFactors(CPT cpt1, CPT cpt2) {
 		ArrayList<Variable> union = new ArrayList<Variable>();
 		Linked_List<Variable> union_ln = new Linked_List<>(new Variable());
 		Linked_List<Variable> q = union_ln;
+		Linked_List<Variable> m = cpt1.given;
+		Linked_List<Variable> p = cpt2.given;
 		int sum = 1;
-		for (int i = 0; i < factors.size(); i++) {
-			Linked_List<Variable> p = factors.get(i).given;
-			if(p==null && factors.get(i).x!=null)
+		while(m!=null)
+		{
+			if(!union.contains(m.getValue()))
 			{
-				union.add(factors.get(i).x);
-				q.setNext(new Linked_List<Variable>(union.get(i)));
+				union.add(m.getValue());
+				q.setNext(new Linked_List<Variable>(m.getValue()));
 				q=q.getNext();
-				sum*=union.get(i).getOptions();
+				sum*=m.getValue().getOptions();	
 			}
-			else
+			m=m.getNext();
+		}
+		while(p!=null)
+		{
+			if(!union.contains(p.getValue()))
 			{
-				while(p!=null)
-				{
-					if(!union.contains(p.getValue())) {
-						union.add(p.getValue());
-						q.setNext(new Linked_List<Variable>(p.getValue()));
-						q=q.getNext();
-						sum*=p.getValue().getOptions();
-					}
-					p=p.getNext();
-				}
+				union.add(p.getValue());
+				q.setNext(new Linked_List<Variable>(p.getValue()));
+				q=q.getNext();
+				sum*=p.getValue().getOptions();	
 			}
+			p=p.getNext();
 		}
 		union_ln = union_ln.getNext();
-		String [][]truth_table = new String [sum][union.size()];
-		CPT joined = new CPT(truth_table,union_ln);
-		joined.given = union_ln;
-		
-		
-		
-		
-		
-		
-		return null;
-	}
+		String [][]truth = new String [sum][union.size()];
+		double [] result_probs = new double[sum];
+		CPT result = new CPT(truth,union_ln);
+		result.given = union_ln;
+		result.probabilities = result_probs;
+		double prob1 = 0,prob2 =0;
+		for (int i = 0; i < truth.length; i++) {
+			p=result.given;
+			for (int j = 0; j < truth[0].length; j++) {
+				p.getValue().setCurrentOutcome(truth[i][j]);
+				p=p.getNext();
+			}
+			prob1 = cpt1.getProbailityByCurrentOutcomes();
+			prob2 = cpt2.getProbailityByCurrentOutcomes();	
+			result_probs[i] = prob1*prob2;
+		}
 
+
+		return result;
+	}
 	public static void Eliminate(CPT cpt)
 	{
 
@@ -212,7 +283,7 @@ public class VE {
 				}
 			}
 			contains.sort(null);
-			join(contains);
+			CPT hidden_result = join(contains);
 
 			hidden.remove(0);
 		}

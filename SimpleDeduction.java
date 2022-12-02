@@ -198,7 +198,6 @@ public class SimpleDeduction {
 				String [][] every_option_hidden = new String [options][hidden.size()];
 				CPT hidden_truth_table = new CPT(every_option_hidden,hidden_ln);
 
-
 				arr[1]=0;
 				arr[2]=0;
 				double result;

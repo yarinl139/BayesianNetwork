@@ -194,6 +194,18 @@ public class CPT implements Comparable{
 		}
 		return -1;
 	}
+	public double getProbailityByCurrentOutcomes()
+	{
+		Linked_List<Variable> p = this.given;
+		ArrayList<String> arr = new ArrayList<>();
+		while(p!=null)
+		{
+			arr.add(p.getValue().current_outcome);
+			p=p.getNext();
+		}
+		return this.getProbabilityByOutcomes(arr);
+		
+	}
 	public int getNumOfVariables()
 	{
 		int sum=0;
@@ -298,7 +310,7 @@ public class CPT implements Comparable{
 			while(p!=null)
 			{
 				if(p.getValue().getName().equals(name))
-					return true;
+ 					return true;
 				p=p.getNext();
 			}
 		}
