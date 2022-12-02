@@ -138,59 +138,7 @@ public class VE {
 		}
 		return cpts;
 	}
-	public static CPT join(ArrayList<CPT> factors)
-	{
-		CPT res = factors.get(0);
-		for (int i = 1; i < factors.size(); i++) {
-
-			res = joinTwoFactors(res,factors.get(i));
-		}
-
-		return res;
-
-
-
-
-		//		ArrayList<Variable> union = new ArrayList<Variable>();
-		//		Linked_List<Variable> union_ln = new Linked_List<>(new Variable());
-		//		Linked_List<Variable> q = union_ln;
-		//		int sum = 1;
-		//		for (int i = 0; i < factors.size(); i++) {
-		//			Linked_List<Variable> p = factors.get(i).given;
-		//			if(p==null && factors.get(i).x!=null)
-		//			{
-		//				union.add(factors.get(i).x);
-		//				q.setNext(new Linked_List<Variable>(union.get(i)));
-		//				q=q.getNext();
-		//				sum*=union.get(i).getOptions();
-		//			}
-		//			else
-		//			{
-		//				while(p!=null)
-		//				{
-		//					if(!union.contains(p.getValue())) {
-		//						union.add(p.getValue());
-		//						q.setNext(new Linked_List<Variable>(p.getValue()));
-		//						q=q.getNext();
-		//						sum*=p.getValue().getOptions();
-		//					}
-		//					p=p.getNext();
-		//				}
-		//			}
-		//		}
-		//		union_ln = union_ln.getNext();
-		//		String [][]truth_table = new String [sum][union.size()];
-		//		CPT joined = new CPT(truth_table,union_ln);
-		//		joined.given = union_ln;
-		//		
-		//		
-		//		
-		//		
-		//		
-		//		
-		//		return null;
-	}
-	private static boolean AlreadyExists(Linked_List<Variable> list,Variable other)
+	public static boolean AlreadyExists(Linked_List<Variable> list,Variable other)
 	{
 		Linked_List<Variable> p = list;
 		while(p!=null)
@@ -201,7 +149,17 @@ public class VE {
 		}
 		return false;
 	}
-	private static CPT joinTwoFactors(CPT cpt1, CPT cpt2) {
+	public static CPT join(double[]arr,ArrayList<CPT> factors)
+	{
+		CPT res = factors.get(0);
+		for (int i = 1; i < factors.size(); i++) {
+
+			res = joinTwoFactors(arr,res,factors.get(i));
+		}
+
+		return res;
+	}
+	private static CPT joinTwoFactors(double[] arr,CPT cpt1, CPT cpt2) {
 		ArrayList<Variable> union = new ArrayList<Variable>();
 		Linked_List<Variable> union_ln = new Linked_List<>(new Variable());
 		Linked_List<Variable> q = union_ln;
@@ -246,6 +204,7 @@ public class VE {
 			prob1 = cpt1.getProbailityByCurrentOutcomes();
 			prob2 = cpt2.getProbailityByCurrentOutcomes();	
 			result_probs[i] = prob1*prob2;
+			arr[2]++;
 		}
 
 
@@ -253,11 +212,11 @@ public class VE {
 	}
 	public static void Eliminate(CPT cpt)
 	{
-
+		
 	}
 	public static int[] VariableElimination(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network)
 	{
-		int []arr = new int [3];
+		double []arr = new double [3];
 		ArrayList<Variable> query = new ArrayList<>();//saving the query variable
 		ArrayList<Variable> evidence = new ArrayList<>(); //saving the evidence variables
 		ArrayList<Variable> hidden = new ArrayList<>(); //saving the hidden parameters
@@ -283,7 +242,7 @@ public class VE {
 				}
 			}
 			contains.sort(null);
-			CPT hidden_result = join(contains);
+			CPT hidden_result = join(arr,contains);
 
 			hidden.remove(0);
 		}

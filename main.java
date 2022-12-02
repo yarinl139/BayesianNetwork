@@ -165,7 +165,7 @@ public class main {
 				}
 				if(desirable_func == '2')
 				{
-					VE.VariableElimination(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
+					//VE.VariableElimination(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
 				}
 				queries_iterator = queries_iterator.getNext();
 
