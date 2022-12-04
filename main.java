@@ -165,7 +165,8 @@ public class main {
 				}
 				if(desirable_func == '2')
 				{
-					//VE.VariableElimination(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
+					arr = VE.VariableElimination(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
+					fw.write(df.format(arr[0]) + "," + (int)arr[1] + "," + (int)arr[2] + "\n");
 				}
 				queries_iterator = queries_iterator.getNext();
 

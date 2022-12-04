@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class CPT implements Comparable{
-	
+
 	Variable x;
 	Linked_List<Variable> given;
 	String [][]table; //a general truth table including x
@@ -196,7 +196,15 @@ public class CPT implements Comparable{
 	}
 	public double getProbailityByCurrentOutcomes()
 	{
-		Linked_List<Variable> p = this.given;
+		Linked_List<Variable> p;
+		if(this.given!=null)
+		{
+			p= this.given;
+		}
+		else
+		{
+			p = new Linked_List<>(this.x);
+		}
 		ArrayList<String> arr = new ArrayList<>();
 		while(p!=null)
 		{
@@ -204,8 +212,53 @@ public class CPT implements Comparable{
 			p=p.getNext();
 		}
 		return this.getProbabilityByOutcomes(arr);
-		
+
 	}
+	public ArrayList<Double> Variable_To_Eliminate(Variable me)
+	{
+		me.setCurrentOutcome("rip");
+		ArrayList<Double> arr = new ArrayList<>();
+		String outcomes ="";
+		int index_of_me = 0 ,flag = 0;
+		Linked_List<Variable> p = this.given;
+		while(p!=null)
+		{
+			if(p.getValue()!=me)
+			{
+				outcomes+=p.getValue().current_outcome;
+				flag++;
+				p=p.getNext();
+			}
+			else
+			{
+				outcomes+=p.getValue().current_outcome;
+				index_of_me = flag;
+				p=p.getNext();
+			}
+		}
+		for (int i = 0; i < table.length; i++) {
+			this.table[i][index_of_me] = "rip";
+		}
+		
+		String st = "";
+		for (int i = 0; i < table.length; i++) {
+			st = "";
+			for (int j = 0; j < table[0].length; j++) {
+				st+=table[i][j];
+			}
+			if(st.equals(outcomes))
+			{
+				arr.add(probabilities[i]);
+			}
+		}
+		
+		return arr;
+	}
+	
+	
+	
+	
+	
 	public int getNumOfVariables()
 	{
 		int sum=0;
@@ -293,6 +346,7 @@ public class CPT implements Comparable{
 
 
 	}
+
 	public boolean inCPT(String name)
 	{
 		if(this.given == null)
@@ -302,7 +356,7 @@ public class CPT implements Comparable{
 				if(this.x.getName().equals(name))
 					return true;
 			}
-				
+
 		}
 		else
 		{
@@ -310,7 +364,7 @@ public class CPT implements Comparable{
 			while(p!=null)
 			{
 				if(p.getValue().getName().equals(name))
- 					return true;
+					return true;
 				p=p.getNext();
 			}
 		}

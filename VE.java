@@ -210,17 +210,62 @@ public class VE {
 
 		return result;
 	}
-	public static void Eliminate(CPT cpt)
+	public static CPT Eliminate(double []arr ,CPT cpt , Variable current_hidden)
 	{
-		
+		if(cpt.getCPTSize() == 2)
+			return null;
+		Linked_List<Variable> parents = new Linked_List<>(new Variable());
+		Linked_List<Variable> p = cpt.given;
+		Linked_List<Variable> q = parents;
+		int count_variables = 0;
+		while(p!=null)
+		{
+			if(p.getValue()!=current_hidden)
+			{
+				q.setNext(new Linked_List<Variable>(p.getValue()));
+				q=q.getNext();
+			}
+			p=p.getNext();
+			count_variables++;
+		}
+		parents = parents.getNext();
+		String [][] truth = new String[cpt.getCPTSize()/current_hidden.getOptions()][count_variables-1];
+		CPT eliminated = new CPT(truth,parents);
+		double [] probabilities = new double[cpt.getCPTSize()/current_hidden.getOptions()];
+		eliminated.given = parents;
+		double sum = 0;
+		for (int i = 0; i < truth.length; i++) {
+			p = eliminated.given;
+			sum=0;
+			for (int j = 0; j < truth[0].length; j++) {
+				if(p.getValue()!=current_hidden)
+				{
+					p.getValue().setCurrentOutcome(truth[i][j]);
+					p=p.getNext();
+				}
+			}
+			ArrayList<Double> probs_to_sum= cpt.Variable_To_Eliminate(current_hidden);
+			for (int j = 0; j < probs_to_sum.size(); j++) {
+				sum+=probs_to_sum.get(j);
+				arr[1]++;
+			}
+			probabilities[i] = sum;
+
+		}
+		eliminated.probabilities = probabilities;
+		arr[1]--;
+		return eliminated;
 	}
-	public static int[] VariableElimination(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network)
+
+
+	public static double[] VariableElimination(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network)
 	{
 		double []arr = new double [3];
 		ArrayList<Variable> query = new ArrayList<>();//saving the query variable
 		ArrayList<Variable> evidence = new ArrayList<>(); //saving the evidence variables
 		ArrayList<Variable> hidden = new ArrayList<>(); //saving the hidden parameters
 		PreProcess(str, query, evidence, hidden, variables, bayesian_network);
+		String query_wanted_outcome = query.get(0).current_outcome;
 		ArrayList<CPT> diminished_evidence = new ArrayList<>();
 		// i need to iterate over the evidence variables and save the diminished CPTs.
 		for (int i = 0; i < evidence.size(); i++) {
@@ -231,7 +276,6 @@ public class VE {
 		factors.addAll(getAllCPT(bayesian_network,query));
 		factors.addAll(diminished_evidence);
 		factors.addAll(getAllCPT(bayesian_network,hidden));
-
 		while(!hidden.isEmpty())
 		{
 			ArrayList<CPT> contains = new ArrayList<>(); //take all factors including the current variable
@@ -243,11 +287,41 @@ public class VE {
 			}
 			contains.sort(null);
 			CPT hidden_result = join(arr,contains);
-
+			CPT eliminated = Eliminate(arr,hidden_result,hidden.get(0));
+			if(eliminated.getCPTSize()>=2) //if the factor after elimination became one valued, discard the factor.
+			{
+				for (int j = 0; j < factors.size(); j++) {
+					if(factors.get(j)== null || factors.get(j).inCPT(hidden.get(0).getName()))
+					{
+						factors.remove(factors.get(j));
+						j=-1;
+						
+					}
+				}
+				if(eliminated != null)
+				{
+					factors.add(eliminated);
+				}
+			}
 			hidden.remove(0);
 		}
+		CPT final_of_finals = join(arr,factors);
+		double total=0,sum = 0;
+		double final_result = 0;
 
-		return null;
+		for (int i = 0; i < final_of_finals.probabilities.length; i++) {
+			total+=final_of_finals.probabilities[i];
+			arr[1]++;
+		}
+		arr[1]--;
+		for (int i = 0; i < final_of_finals.table.length; i++) {
+			for (int j = 0; j < final_of_finals.table[0].length; j++) {
+				if(final_of_finals.table[i][j].equals(query_wanted_outcome))
+					sum = final_of_finals.probabilities[i];
+			}
+		}
+		arr[0]=sum/total;	
+		return arr;
 	}
 
 
