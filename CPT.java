@@ -239,7 +239,7 @@ public class CPT implements Comparable{
 		for (int i = 0; i < table.length; i++) {
 			this.table[i][index_of_me] = "rip";
 		}
-		
+
 		String st = "";
 		for (int i = 0; i < table.length; i++) {
 			st = "";
@@ -251,14 +251,14 @@ public class CPT implements Comparable{
 				arr.add(probabilities[i]);
 			}
 		}
-		
+
 		return arr;
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 	public int getNumOfVariables()
 	{
 		int sum=0;
@@ -310,28 +310,39 @@ public class CPT implements Comparable{
 		}
 		return sum;
 	}
-	public CPT Diminish() //local CPTS instantiated by evidence
+	public CPT Diminish(Variable evidence) //local CPTS instantiated by evidence
 	{
-		double [] updated_probs = new double[this.getCPTSize()/this.x.getOptions()];
-		String [][] updated_table = new String [this.getCPTSize()/this.x.getOptions()][getNumOfVariables()-1];
-		Linked_List<Variable> parents = new Linked_List<Variable> (new Variable(x));
+		if(this.getCPTSize()<=2)
+			return null;
+		double [] updated_probs = new double[this.getCPTSize()/evidence.getOptions()];
+		String [][] updated_table = new String [this.getCPTSize()/evidence.getOptions()][getNumOfVariables()-1];
+		Linked_List<Variable> parents = new Linked_List<Variable> (new Variable());
 		Linked_List<Variable> p = parents;
 		Linked_List<Variable> m = given;
-		while(m != null && m.getValue()!=this.x)
+		int place = 0;
+		int index = 0;
+		while(m != null)
 		{
-			p.setNext(new Linked_List<Variable>(given.getValue()));
-			p=p.getNext();
+			if(m.getValue()!=evidence)
+			{
+				p.setNext(new Linked_List<Variable>(m.getValue()));
+				p=p.getNext();
+				index++;
+			}
+			else
+				place = index;
 			m=m.getNext();
 		}
-		int index = 0;
+		
+		int flag = 0;
 		parents = parents.getNext();
 		for (int i = 0; i < this.table.length; i++) {
-			if(table[i][this.table[0].length-1].equals(x.current_outcome))
+			if(table[i][place].equals(evidence.current_outcome))
 			{
-				if(index<updated_probs.length)
+				if(flag<updated_probs.length)
 				{
-					updated_probs[index] = this.probabilities[i];
-					index++;
+					updated_probs[flag] = this.probabilities[i];
+					flag++;
 				}
 			}
 		}

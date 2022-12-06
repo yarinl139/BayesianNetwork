@@ -7,7 +7,7 @@ public class Variable implements Comparable {
 	public String[] outcomes;
 	public String current_outcome;
 	public int index = 0;
-
+	
 	public Variable()
 	{
 		this.name = null;

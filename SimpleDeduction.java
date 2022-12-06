@@ -4,6 +4,7 @@ public class SimpleDeduction {
 	//This function's goal is to search over all of the variable's outcome and their parents (P(A1,A2,A3...An))
 	public static double Calculate(double []arr, Variable query, ArrayList<Variable> evidence, ArrayList<Variable> hidden ,ArrayList<Variable> variables,ArrayList<CPT> bayesian_network)
 	{
+		
 		ArrayList<String> outcomes;
 		double result=1;
 		for (int i = 0; i < variables.size(); i++) {
@@ -158,14 +159,14 @@ public class SimpleDeduction {
 				hidden.add(variables.get(i));
 			}
 		}
-		if(hidden.isEmpty()) //checking if there are no hidden variables, using the P(A,B)/P(B) forumla
+		if(hidden.isEmpty()) //checking if there are no hidden variables, using the P(A,B)/P(B) formula
 		{
-			double top = Calculate(arr,null,null,null,query_parents_al,bayesian_network);
+			double top = Calculate(arr,query,evidence,hidden,variables,bayesian_network);
 			double sum = 0;
 			int count_additions = 0;
 			for (int i = 0; i < query.getOptions(); i++) {
 				query.setCurrentOutcome(query.outcomes[i]);
-				sum+=Calculate(arr,null,null,null,query_parents_al,bayesian_network);
+				sum+=Calculate(arr,query,evidence,hidden,variables,bayesian_network);
 				count_additions++;
 			}
 			System.out.println(top/sum);
@@ -176,7 +177,8 @@ public class SimpleDeduction {
 
 		else {
 			//****from this line of code i have the hidden variables stored in an ArrayList
-			
+			query_evidence.sort(null);
+			query_parents_al.sort(null);
 			if(query_evidence.equals(query_parents_al)) //if the query is already in the CPT
 			{
 				arr[0] = getCPT(bayesian_network,query.getName()).getThisVariableProb();
