@@ -1,9 +1,10 @@
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 
-public class VE {
+public class MyHeuristic {
 
 	public static Variable getVariable(ArrayList<Variable> variables , String variable_name) //returns a variable object in the ArrayList of the variables
 	{
@@ -130,8 +131,6 @@ public class VE {
 			}
 		}
 	}
-	
-	//This function returns all of variable's CPT
 	public static ArrayList<CPT> getAllCPT(ArrayList<CPT> bayesian_network,ArrayList<Variable> variables)
 	{
 		ArrayList<CPT> cpts = new ArrayList<CPT>();
@@ -140,7 +139,6 @@ public class VE {
 		}
 		return cpts;
 	}
-	//Checking if the variable is already in the list
 	public static boolean AlreadyExists(Linked_List<Variable> list,Variable other)
 	{
 		Linked_List<Variable> p = list;
@@ -152,7 +150,6 @@ public class VE {
 		}
 		return false;
 	}
-	//iterating over the factors ArrayList and joining them in couples
 	public static CPT join(double[]arr,ArrayList<CPT> factors)
 	{
 		CPT res = factors.get(0);
@@ -162,17 +159,16 @@ public class VE {
 
 		return res;
 	}
-	//this function is joining two factors
 	private static CPT joinTwoFactors(double[] arr,CPT cpt1, CPT cpt2) {
 		ArrayList<Variable> union = new ArrayList<Variable>();
-		Linked_List<Variable> union_ln = new Linked_List<>(new Variable()); //creating a dummy node
-		Linked_List<Variable> q = union_ln;  //a pointer to the union list
-		Linked_List<Variable> m = cpt1.given; //pointer to cpt1 parents
-		Linked_List<Variable> p = cpt2.given; // pointer to cpt2 parents
-		int sum = 1; //sum will count the size of the factor after join
+		Linked_List<Variable> union_ln = new Linked_List<>(new Variable());
+		Linked_List<Variable> q = union_ln;
+		Linked_List<Variable> m = cpt1.given;
+		Linked_List<Variable> p = cpt2.given;
+		int sum = 1;
 		while(m!=null)
 		{
-			if(!union.contains(m.getValue())) //checking if a variable is already in the list, if so continue.
+			if(!union.contains(m.getValue()))
 			{
 				union.add(m.getValue());
 				q.setNext(new Linked_List<Variable>(m.getValue()));
@@ -180,10 +176,8 @@ public class VE {
 				sum*=m.getValue().getOptions();	
 			}
 			m=m.getNext();
-		}  //at this point we have the union of all of the variables
-		
-		
-		while(p!=null) //doing the same for cpt2 pointer
+		}
+		while(p!=null)
 		{
 			if(!union.contains(p.getValue()))
 			{
@@ -194,76 +188,66 @@ public class VE {
 			}
 			p=p.getNext();
 		}
-		
-		union_ln = union_ln.getNext(); //deleting the dummy node
-		
-		String [][]truth = new String [sum][union.size()]; //creating a truth table for the factor after join
-		double [] result_probs = new double[sum]; //creating an array for the factor after join
-		CPT result = new CPT(truth,union_ln); //creating the joined factor
-		result.given = union_ln; //updating its parents
-		result.probabilities = result_probs; //updating its probabilities
+		union_ln = union_ln.getNext();
+		String [][]truth = new String [sum][union.size()];
+		double [] result_probs = new double[sum];
+		CPT result = new CPT(truth,union_ln);
+		result.given = union_ln;
+		result.probabilities = result_probs;
 		double prob1 = 0,prob2 =0;
-		
-		//In this for loop we are iterating over the joined factor's truth table and updating each variable current outcome
 		for (int i = 0; i < truth.length; i++) {
 			p=result.given;
 			for (int j = 0; j < truth[0].length; j++) {
 				p.getValue().setCurrentOutcome(truth[i][j]);
 				p=p.getNext();
 			}
-			prob1 = cpt1.getProbailityByCurrentOutcomes(); //get the probability by outcome in the variables stored in cpt1
-			prob2 = cpt2.getProbailityByCurrentOutcomes();// do the same for cpt2
-			result_probs[i] = prob1*prob2; // multiply the probabilities and store it in the probabilities array of the joined factor
-			arr[2]++; //increase the number of multiplications by 1
+			prob1 = cpt1.getProbailityByCurrentOutcomes();
+			prob2 = cpt2.getProbailityByCurrentOutcomes();	
+			result_probs[i] = prob1*prob2;
+			arr[2]++;
 		}
 		return result;
 	}
-	
 	public static CPT Eliminate(double []arr ,CPT cpt , Variable current_hidden)
 	{
-		if(cpt.getCPTSize() == 2) //if the CPT given is of size 2, return null.
-			return null;
-		
-		Linked_List<Variable> parents = new Linked_List<>(new Variable()); //creating a dummy node
-		Linked_List<Variable> p = cpt.given; //pointer to paretn's list in order to add nodes
+		if(cpt.getCPTSize() == 2)
+			return cpt;
+		Linked_List<Variable> parents = new Linked_List<>(new Variable());
+		Linked_List<Variable> p = cpt.given;
 		Linked_List<Variable> q = parents;
-		int count_variables = 0; //count the total number of variables
+		int count_variables = 0;
 		while(p!=null)
 		{
 			if(p.getValue()!=current_hidden)
 			{
-				q.setNext(new Linked_List<Variable>(p.getValue())); //adding the parents
+				q.setNext(new Linked_List<Variable>(p.getValue()));
 				q=q.getNext();
 			}
 			p=p.getNext();
 			count_variables++;
 		}
-		parents = parents.getNext();//deleting the dummy node
-		
-		//creating the CPT after elimination
+		parents = parents.getNext();
 		String [][] truth = new String[cpt.getCPTSize()/current_hidden.getOptions()][count_variables-1];
 		CPT eliminated = new CPT(truth,parents);
 		double [] probabilities = new double[cpt.getCPTSize()/current_hidden.getOptions()];
 		eliminated.given = parents;
-		
-		double sum = 0; //a variable in order to sum by law of total probability
-		
-		
+		double sum = 0;
 		for (int i = 0; i < truth.length; i++) {
 			p = eliminated.given;
 			sum=0;
 			for (int j = 0; j < truth[0].length; j++) {
 				if(p.getValue()!=current_hidden)
 				{
-					p.getValue().setCurrentOutcome(truth[i][j]); //iterating over the table and updating the current outcome of each variable
+					p.getValue().setCurrentOutcome(truth[i][j]);
 					p=p.getNext();
 				}
 			}
-			ArrayList<Double> probs_to_sum= cpt.Variable_To_Eliminate(current_hidden); 
-			for (int j = 0; j < probs_to_sum.size(); j++) { //summing up the probabilities of the eliminated variable (law of total probability)
+			ArrayList<Double> probs_to_sum= cpt.Variable_To_Eliminate(current_hidden);
+			for (int j = 0; j < probs_to_sum.size(); j++) {
 				sum+=probs_to_sum.get(j);
+				arr[1]+=probs_to_sum.size()-1;
 			}
-			arr[1]+=probs_to_sum.size()-1;// the number of additions is the number of numbers we sum minus 1
+			arr[1]--;
 			probabilities[i] = sum;
 
 		}
@@ -281,7 +265,7 @@ public class VE {
 			}
 		}
 	}
-	public static double[] VariableElimination(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network)
+	public static double[] Heuristic(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network)
 	{
 		double []arr = new double [3];
 		ArrayList<Variable> query = new ArrayList<>();//saving the query variable
@@ -310,16 +294,11 @@ public class VE {
 		}
 
 		String query_wanted_outcome = query.get(0).current_outcome;
-		hidden.sort(null); //sorts the ArrayList by the ABC order
+		Collections.sort(hidden, new ReverseComparator());//sorts the ArrayList by the ABC order
 		ArrayList<CPT> factors = new ArrayList<>();
-		
-		
 		factors.addAll(getAllCPT(bayesian_network,query));
 		factors.addAll(getAllCPT(bayesian_network,evidence));
 		factors.addAll(getAllCPT(bayesian_network,hidden));
-		
-		
-		//STEP 1:
 		for (int i = 0; i < evidence.size(); i++) {
 			for (int j = 0; j < factors.size(); j++) {
 				if(factors.get(j)!=null && factors.get(j).inCPT(evidence.get(i).getName()))
@@ -363,7 +342,7 @@ public class VE {
 				for (int j = 0; j < factors.size(); j++) {
 					if(factors.get(j)== null || factors.get(j).inCPT(hidden.get(0).getName()))
 					{
-						factors.remove(factors.get(j)); //removing the factors we used + null factors
+						factors.remove(factors.get(j));
 						j=-1;
 
 					}

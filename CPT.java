@@ -392,6 +392,44 @@ public class CPT implements Comparable{
 			return -1;
 		else if (this.getCPTSize()>c1.getCPTSize())
 			return 1;
-		return 0;
+		else
+		{
+			int ascii1 = 0;
+			int ascii2 =0;
+			
+			String s1 = "";
+			String s2 = "";
+			
+			
+			Linked_List<Variable> p = this.given;
+			Linked_List<Variable> m = c1.given;
+			if(p==null)
+				s1+=this.x.getName();
+			while(p!=null)
+			{
+				s1 += p.getValue().getName();
+				p=p.getNext();
+			}
+			if(m==null)
+				s2+=c1.x.getName();
+			while(m!=null)
+			{
+				s2+=m.getValue().getName();
+				m=m.getNext();
+			}
+			
+			for (int i = 0; i < s1.length(); i++) {
+				ascii1+=s1.charAt(i);
+			}
+			for (int i = 0; i < s2.length(); i++) {
+				ascii2+=s2.charAt(i);
+			}
+			
+			if(ascii1<ascii2)
+				return -1;
+			else if (ascii1>ascii2)
+				return 1;
+			return 0;
+		}
 	}
 }

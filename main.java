@@ -153,19 +153,24 @@ public class main {
 			FileWriter fw = new FileWriter("output.txt");
 			double []arr;
 			DecimalFormat df = new DecimalFormat("#.#####");
-	        df.setRoundingMode(RoundingMode.FLOOR);
+	        df.setRoundingMode(RoundingMode.CEILING);
 	        
 			while(queries_iterator!=null)
 			{
 				char desirable_func = queries_iterator.getValue().charAt(queries_iterator.getValue().length()-1);
 				if(desirable_func == '1')
 				{
-					arr = SimpleDeduction.SimpleDeduction(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
+					arr = SimpleDeduction.Deduction(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
 					fw.write(df.format(arr[0]) + "," + (int)arr[1] + "," + (int)arr[2] + "\n");
 				}
 				if(desirable_func == '2')
 				{
 					arr = VE.VariableElimination(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
+					fw.write(df.format(arr[0]) + "," + (int)arr[1] + "," + (int)arr[2] + "\n");
+				}
+				if(desirable_func == '3')
+				{
+					arr = MyHeuristic.Heuristic(variables,queries_iterator.getValue().substring(0 ,queries_iterator.getValue().length()-2) , bayesian_network);
 					fw.write(df.format(arr[0]) + "," + (int)arr[1] + "," + (int)arr[2] + "\n");
 				}
 				queries_iterator = queries_iterator.getNext();

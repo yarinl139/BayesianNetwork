@@ -69,7 +69,7 @@ public class SimpleDeduction {
 	}
 
 	//the following code is complicated, we are using the simple conclusion(which is not that simple in code)
-	public static double[] SimpleDeduction(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network) { // Using simple deduction algorithm
+	public static double[] Deduction(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network) { // Using simple deduction algorithm
 		Variable query = null;; //saving the query variable
 		ArrayList<Variable> evidence = new ArrayList<>(); //saving the evidence variables
 		ArrayList<Variable> hidden = new ArrayList<>(); //saving the hidden parameters
