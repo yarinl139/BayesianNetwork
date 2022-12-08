@@ -2,7 +2,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 public class MyHeuristic {
 
@@ -154,7 +156,7 @@ public class MyHeuristic {
 	{
 		CPT res = factors.get(0);
 		for (int i = 1; i < factors.size(); i++) {
-			res = joinTwoFactors(arr,res,factors.get(i));
+			res = joinTwoFactors(arr,factors.get(i),res);
 		}
 
 		return res;
@@ -265,6 +267,41 @@ public class MyHeuristic {
 			}
 		}
 	}
+	public static ArrayList<Variable> SortByAppearance(ArrayList<Variable> hidden, ArrayList<CPT> bayesian_network,ArrayList<Variable> variables)
+	{
+		HashMap<String, Integer> map = new HashMap<>();
+		for (int i = 0; i < hidden.size(); i++) {
+			for (int j = 0; j < bayesian_network.size(); j++) {
+				if(bayesian_network.get(j).inCPT(hidden.get(i).getName()))
+					map.put(hidden.get(i).getName(), 0);
+			}
+		}
+		for (int i = 0; i < hidden.size(); i++) {
+			for (int j = 0; j < bayesian_network.size(); j++) {
+				if(bayesian_network.get(j).inCPT(hidden.get(i).getName()))
+					map.put(hidden.get(i).getName(), map.get(hidden.get(i).getName())+1);
+			}
+		}
+		ArrayList<Variable> Sorted = new ArrayList<>();
+		
+		while(!map.isEmpty())
+		{
+			String flag = "";
+			int min = Integer.MAX_VALUE;
+			for(String s: map.keySet())
+			{
+				if(map.get(s)<min)
+				{
+					min = map.get(s);
+					flag = s;
+				}
+			}
+			Sorted.add(getVariable(variables,flag));
+			map.remove(flag);
+		}
+		return Sorted;
+	}
+
 	public static double[] Heuristic(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network)
 	{
 		double []arr = new double [3];
@@ -275,7 +312,8 @@ public class MyHeuristic {
 		{
 			ArrayList<Variable> union = new ArrayList<Variable>(evidence);
 			union.addAll(query);
-			ArrayList<Variable> checker = new ArrayList<>();
+			ArrayList<Variable> 
+			checker = new ArrayList<>();
 
 			Linked_List<Variable> p  = getCPT(bayesian_network,query.get(0).getName()).given;
 			while(p!=null)
@@ -294,7 +332,10 @@ public class MyHeuristic {
 		}
 
 		String query_wanted_outcome = query.get(0).current_outcome;
-		Collections.sort(hidden, new ReverseComparator());//sorts the ArrayList by the ABC order
+
+		hidden = SortByAppearance(hidden, bayesian_network,variables); // Sorts the hidden array by the number of appearances of each variable
+
+
 		ArrayList<CPT> factors = new ArrayList<>();
 		factors.addAll(getAllCPT(bayesian_network,query));
 		factors.addAll(getAllCPT(bayesian_network,evidence));
@@ -318,12 +359,7 @@ public class MyHeuristic {
 
 			}
 		}
-		
-		
-		
-		
-		
-		
+
 		while(!hidden.isEmpty())
 		{
 			ArrayList<CPT> contains = new ArrayList<>(); //take all factors including the current variable

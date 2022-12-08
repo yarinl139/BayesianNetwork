@@ -340,11 +340,6 @@ public class VE {
 			}
 		}
 		
-		
-		
-		
-		
-		
 		while(!hidden.isEmpty())
 		{
 			ArrayList<CPT> contains = new ArrayList<>(); //take all factors including the current variable

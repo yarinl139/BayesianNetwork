@@ -216,6 +216,7 @@ public class CPT implements Comparable{
 	}
 	public ArrayList<Double> Variable_To_Eliminate(Variable me)
 	{
+		String last_outcome = me.current_outcome;
 		me.setCurrentOutcome("rip");
 		ArrayList<Double> arr = new ArrayList<>();
 		String outcomes ="";
@@ -251,7 +252,7 @@ public class CPT implements Comparable{
 				arr.add(probabilities[i]);
 			}
 		}
-
+		me.setCurrentOutcome(last_outcome);
 		return arr;
 	}
 
