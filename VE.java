@@ -4,7 +4,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 
 public class VE {
-
 	public static Variable getVariable(ArrayList<Variable> variables , String variable_name) //returns a variable object in the ArrayList of the variables
 	{
 		int index = 0 ;
@@ -16,6 +15,7 @@ public class VE {
 		}
 		return null;
 	}
+
 	public static boolean isOutcome(Variable vb , String st) //return if a string is an outcome of a variable
 	{
 		if(vb==null)
@@ -25,6 +25,32 @@ public class VE {
 				return true;
 		}
 		return false;
+	}
+	private static void RemoveFromFactors(ArrayList<CPT> factors, Variable variable) {		
+		for (int i = 0; i < factors.size(); i++) {
+			if(factors.get(i).inCPT(variable.getName()))
+			{
+				factors.remove(factors.get(i));
+				i=-1;
+			}
+		}
+
+	}
+	private static boolean isLeaf(ArrayList<CPT> bayesian_network, Variable variable) {
+		ArrayList<CPT> check;
+		check = getFactorsContaining(bayesian_network,variable);
+		if(check.size()== 1 && check.get(0).getCPTSize()>2)
+			return true;
+		return false;
+
+	}
+	private static ArrayList<CPT> getFactorsContaining(ArrayList<CPT> bayesian_network, Variable variable) {
+		ArrayList<CPT> check = new ArrayList<>();
+		for (int i = 0; i < bayesian_network.size(); i++) {
+			if(bayesian_network.get(i).inCPT(variable.getName()))
+				check.add(bayesian_network.get(i));
+		}
+		return check;
 	}
 
 	public static boolean isName(ArrayList<Variable> variables, String str) //returns if a string is a name of a variable
@@ -130,7 +156,7 @@ public class VE {
 			}
 		}
 	}
-	
+
 	//This function returns all of variable's CPT
 	public static ArrayList<CPT> getAllCPT(ArrayList<CPT> bayesian_network,ArrayList<Variable> variables)
 	{
@@ -181,8 +207,8 @@ public class VE {
 			}
 			m=m.getNext();
 		}  //at this point we have the union of all of the variables
-		
-		
+
+
 		while(p!=null) //doing the same for cpt2 pointer
 		{
 			if(!union.contains(p.getValue()))
@@ -194,16 +220,16 @@ public class VE {
 			}
 			p=p.getNext();
 		}
-		
+
 		union_ln = union_ln.getNext(); //deleting the dummy node
-		
+
 		String [][]truth = new String [sum][union.size()]; //creating a truth table for the factor after join
 		double [] result_probs = new double[sum]; //creating an array for the factor after join
 		CPT result = new CPT(truth,union_ln); //creating the joined factor
 		result.given = union_ln; //updating its parents
 		result.probabilities = result_probs; //updating its probabilities
 		double prob1 = 0,prob2 =0;
-		
+
 		//In this for loop we are iterating over the joined factor's truth table and updating each variable current outcome
 		for (int i = 0; i < truth.length; i++) {
 			p=result.given;
@@ -218,12 +244,13 @@ public class VE {
 		}
 		return result;
 	}
-	
+
+
 	public static CPT Eliminate(double []arr ,CPT cpt , Variable current_hidden)
 	{
 		if(cpt.getCPTSize() == 2) //if the CPT given is of size 2, return null.
 			return null;
-		
+
 		Linked_List<Variable> parents = new Linked_List<>(new Variable()); //creating a dummy node
 		Linked_List<Variable> p = cpt.given; //pointer to paretn's list in order to add nodes
 		Linked_List<Variable> q = parents;
@@ -239,16 +266,16 @@ public class VE {
 			count_variables++;
 		}
 		parents = parents.getNext();//deleting the dummy node
-		
+
 		//creating the CPT after elimination
 		String [][] truth = new String[cpt.getCPTSize()/current_hidden.getOptions()][count_variables-1];
 		CPT eliminated = new CPT(truth,parents);
 		double [] probabilities = new double[cpt.getCPTSize()/current_hidden.getOptions()];
 		eliminated.given = parents;
-		
+
 		double sum = 0; //a variable in order to sum by law of total probability
-		
-		
+
+
 		for (int i = 0; i < truth.length; i++) {
 			p = eliminated.given;
 			sum=0;
@@ -312,14 +339,13 @@ public class VE {
 		String query_wanted_outcome = query.get(0).current_outcome;
 		hidden.sort(null); //sorts the ArrayList by the ABC order
 		ArrayList<CPT> factors = new ArrayList<>();
-		
-		
+
+
 		factors.addAll(getAllCPT(bayesian_network,query));
 		factors.addAll(getAllCPT(bayesian_network,evidence));
 		factors.addAll(getAllCPT(bayesian_network,hidden));
-		
-		
-		//STEP 1:
+
+
 		for (int i = 0; i < evidence.size(); i++) {
 			for (int j = 0; j < factors.size(); j++) {
 				if(factors.get(j)!=null && factors.get(j).inCPT(evidence.get(i).getName()))
@@ -338,8 +364,17 @@ public class VE {
 				j=-1;
 
 			}
-		}
-		
+		}	
+		for (int i = 0; i < hidden.size(); i++) {
+
+			if(isLeaf(bayesian_network,hidden.get(i)))
+			{
+				RemoveFromFactors(factors,hidden.get(i));
+				hidden.remove(i);
+			}
+
+		}	
+
 		while(!hidden.isEmpty())
 		{
 			ArrayList<CPT> contains = new ArrayList<>(); //take all factors including the current variable
@@ -348,26 +383,25 @@ public class VE {
 				{
 					contains.add(factors.get(j));
 				}
+
 			}
 
 			contains.sort(null);
 			CPT hidden_result = join(arr,contains);
 			CPT eliminated = Eliminate(arr,hidden_result,hidden.get(0));
-			if(eliminated.getCPTSize()>=2) //if the factor after elimination became one valued, discard the factor.
-			{
-				for (int j = 0; j < factors.size(); j++) {
-					if(factors.get(j)== null || factors.get(j).inCPT(hidden.get(0).getName()))
-					{
-						factors.remove(factors.get(j)); //removing the factors we used + null factors
-						j=-1;
-
-					}
-				}
-				if(eliminated != null)
+			for (int j = 0; j < factors.size(); j++) {
+				if(factors.get(j)== null || factors.get(j).inCPT(hidden.get(0).getName()))
 				{
-					factors.add(eliminated);
+					factors.remove(factors.get(j)); //removing the factors we used + null factors
+					j=-1;
+
 				}
 			}
+			if(eliminated != null)
+			{
+				factors.add(eliminated);
+			}
+
 			hidden.remove(0);
 		}
 		CPT final_of_finals = join(arr,factors);
@@ -387,6 +421,9 @@ public class VE {
 		arr[0]=sum/total;	
 		return arr;
 	}
+
+
+
 
 
 }

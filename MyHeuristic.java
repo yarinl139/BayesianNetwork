@@ -19,6 +19,32 @@ public class MyHeuristic {
 		}
 		return null;
 	}
+	private static void RemoveFromFactors(ArrayList<CPT> factors, Variable variable) {		
+		for (int i = 0; i < factors.size(); i++) {
+			if(factors.get(i).inCPT(variable.getName()))
+			{
+				factors.remove(factors.get(i));
+				i=-1;
+			}
+		}
+
+	}
+	private static boolean isLeaf(ArrayList<CPT> bayesian_network, Variable variable) {
+		ArrayList<CPT> check;
+		check = getFactorsContaining(bayesian_network,variable);
+		if(check.size()== 1 && check.get(0).getCPTSize()>2)
+			return true;
+		return false;
+
+	}
+	private static ArrayList<CPT> getFactorsContaining(ArrayList<CPT> bayesian_network, Variable variable) {
+		ArrayList<CPT> check = new ArrayList<>();
+		for (int i = 0; i < bayesian_network.size(); i++) {
+			if(bayesian_network.get(i).inCPT(variable.getName()))
+				check.add(bayesian_network.get(i));
+		}
+		return check;
+	}
 	public static boolean isOutcome(Variable vb , String st) //return if a string is an outcome of a variable
 	{
 		if(vb==null)
@@ -301,7 +327,6 @@ public class MyHeuristic {
 		}
 		return Sorted;
 	}
-
 	public static double[] Heuristic(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network)
 	{
 		double []arr = new double [3];
@@ -358,6 +383,15 @@ public class MyHeuristic {
 				j=-1;
 
 			}
+		}
+		for (int i = 0; i < hidden.size(); i++) {
+
+			if(isLeaf(bayesian_network,hidden.get(i)))
+			{
+				RemoveFromFactors(factors,hidden.get(i));
+				hidden.remove(i);
+			}
+
 		}
 
 		while(!hidden.isEmpty())

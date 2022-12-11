@@ -1,14 +1,15 @@
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class CPT implements Comparable{
+public class CPT implements Comparable<Object>{
 
 	Variable x;
 	Linked_List<Variable> given;
 	String [][]table; //a general truth table including x
 	double [] probabilities; // a probability array
 	String str_prob;
-
+	
+	
 	public CPT()
 	{
 		this.x = null;
@@ -432,5 +433,6 @@ public class CPT implements Comparable{
 				return 1;
 			return 0;
 		}
-	}
+	}	
+	
 }
