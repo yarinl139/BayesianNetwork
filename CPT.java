@@ -8,8 +8,8 @@ public class CPT implements Comparable<Object>{
 	String [][]table; //a general truth table including x
 	double [] probabilities; // a probability array
 	String str_prob;
-	
-	
+
+
 	public CPT()
 	{
 		this.x = null;
@@ -195,6 +195,7 @@ public class CPT implements Comparable<Object>{
 		}
 		return -1;
 	}
+	
 	public double getProbailityByCurrentOutcomes()
 	{
 		Linked_List<Variable> p;
@@ -314,7 +315,7 @@ public class CPT implements Comparable<Object>{
 	}
 	public CPT Diminish(Variable evidence) //local CPTS instantiated by evidence
 	{
-		if(this.getCPTSize()<=2)
+		if(this.getCPTSize()<=evidence.getOptions())
 			return null;
 		double [] updated_probs = new double[this.getCPTSize()/evidence.getOptions()];
 		String [][] updated_table = new String [this.getCPTSize()/evidence.getOptions()][getNumOfVariables()-1];
@@ -335,7 +336,7 @@ public class CPT implements Comparable<Object>{
 				place = index;
 			m=m.getNext();
 		}
-		
+
 		int flag = 0;
 		parents = parents.getNext();
 		for (int i = 0; i < this.table.length; i++) {
@@ -359,7 +360,7 @@ public class CPT implements Comparable<Object>{
 
 
 	}
-
+	//check if a specific variable is inside the CPT
 	public boolean inCPT(String name)
 	{
 		if(this.given == null)
@@ -387,6 +388,10 @@ public class CPT implements Comparable<Object>{
 	{
 		return given==null;
 	}
+	
+	
+	//comparing the CPT sizes, if the same size compare the ASCII value
+	
 	@Override
 	public int compareTo(Object o) {
 		CPT c1 = (CPT)o;
@@ -398,11 +403,11 @@ public class CPT implements Comparable<Object>{
 		{
 			int ascii1 = 0;
 			int ascii2 =0;
-			
+
 			String s1 = "";
 			String s2 = "";
-			
-			
+
+
 			Linked_List<Variable> p = this.given;
 			Linked_List<Variable> m = c1.given;
 			if(p==null)
@@ -419,14 +424,14 @@ public class CPT implements Comparable<Object>{
 				s2+=m.getValue().getName();
 				m=m.getNext();
 			}
-			
+
 			for (int i = 0; i < s1.length(); i++) {
 				ascii1+=s1.charAt(i);
 			}
 			for (int i = 0; i < s2.length(); i++) {
 				ascii2+=s2.charAt(i);
 			}
-			
+
 			if(ascii1<ascii2)
 				return -1;
 			else if (ascii1>ascii2)
@@ -434,5 +439,5 @@ public class CPT implements Comparable<Object>{
 			return 0;
 		}
 	}	
-	
+
 }

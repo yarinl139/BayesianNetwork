@@ -39,7 +39,7 @@ public class VE {
 	private static boolean isLeaf(ArrayList<CPT> bayesian_network, Variable variable) {
 		ArrayList<CPT> check;
 		check = getFactorsContaining(bayesian_network,variable);
-		if(check.size()== 1 && check.get(0).getCPTSize()>2)
+		if(check.size()== 1)
 			return true;
 		return false;
 
@@ -248,7 +248,7 @@ public class VE {
 
 	public static CPT Eliminate(double []arr ,CPT cpt , Variable current_hidden)
 	{
-		if(cpt.getCPTSize() == 2) //if the CPT given is of size 2, return null.
+		if(cpt.getCPTSize() == current_hidden.getOptions()) //if the CPT given is of the current hidden size, return null.
 			return null;
 
 		Linked_List<Variable> parents = new Linked_List<>(new Variable()); //creating a dummy node
@@ -308,6 +308,7 @@ public class VE {
 			}
 		}
 	}
+	
 	public static double[] VariableElimination(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network)
 	{
 		double []arr = new double [3];
@@ -315,6 +316,7 @@ public class VE {
 		ArrayList<Variable> evidence = new ArrayList<>(); //saving the evidence variables
 		ArrayList<Variable> hidden = new ArrayList<>(); //saving the hidden parameters
 		PreProcess(str, query, evidence, hidden, variables, bayesian_network);
+		//checks if the query is already in the table
 		{
 			ArrayList<Variable> union = new ArrayList<Variable>(evidence);
 			union.addAll(query);
@@ -340,12 +342,13 @@ public class VE {
 		hidden.sort(null); //sorts the ArrayList by the ABC order
 		ArrayList<CPT> factors = new ArrayList<>();
 
-
+		//creating the factor's ArrayList
 		factors.addAll(getAllCPT(bayesian_network,query));
-		factors.addAll(getAllCPT(bayesian_network,evidence));
+		factors.addAll(getAllCPT(bayesian_network,evidence));  
 		factors.addAll(getAllCPT(bayesian_network,hidden));
 
 
+		//Diminishing the evidence rows
 		for (int i = 0; i < evidence.size(); i++) {
 			for (int j = 0; j < factors.size(); j++) {
 				if(factors.get(j)!=null && factors.get(j).inCPT(evidence.get(i).getName()))
@@ -357,6 +360,7 @@ public class VE {
 				}
 			}
 		}
+		//removing any null factors
 		for (int j = 0; j < factors.size(); j++) {
 			if(factors.get(j)== null)
 			{
@@ -364,17 +368,28 @@ public class VE {
 				j=-1;
 
 			}
-		}	
-		for (int i = 0; i < hidden.size(); i++) {
+		}
+		//Removing repeatedly leaf nodes that are not a query or evidence node.
+		boolean changed = true;
+		while(changed)
+		{
+			ArrayList<CPT> checker = new ArrayList<>();
+			checker.addAll(factors);
+			for (int i = 0; i < hidden.size(); i++) {
 
-			if(isLeaf(bayesian_network,hidden.get(i)))
-			{
-				RemoveFromFactors(factors,hidden.get(i));
-				hidden.remove(i);
+				if(isLeaf(factors,hidden.get(i)))
+				{
+					RemoveFromFactors(factors,hidden.get(i));
+					hidden.remove(i);
+				}
+				
 			}
+			if(checker.equals(factors))
+				changed = false;
+		}
 
-		}	
 
+		//the actual variable elimination algorithm
 		while(!hidden.isEmpty())
 		{
 			ArrayList<CPT> contains = new ArrayList<>(); //take all factors including the current variable
