@@ -71,65 +71,35 @@ public class MyHeuristic {
 		}
 		return null;
 	}
-	public static void PreProcess(String str ,ArrayList<Variable> query, ArrayList<Variable>evidence,ArrayList<Variable>hidden,ArrayList<Variable> variables,ArrayList<CPT> bayesian_network)
+	public static boolean PreProcess(String str ,double[]arr,ArrayList<Variable> query, ArrayList<Variable>evidence,ArrayList<Variable>hidden,ArrayList<Variable> variables,ArrayList<CPT> bayesian_network)
 	{
-		Variable x = null;
-		String save_query = ""; //this is used for saving the query outcome for normalization later
-		int flag_divider = 0; //divides the string at char '|'
-		String name = "";
-		String outcome = "";
-
-		//This piece of code is used to get the query parameter and set its outcome
-		for (int i = 1; i < str.length() && str.charAt(i) != '|'; ++i) {
-			if(str.charAt(i)!='(' && str.charAt(i)!=')' && str.charAt(i)!=',' && str.charAt(i)!= '=')
-			{	
-				name+=str.charAt(i);
-				outcome += str.charAt(i);
-			}
-			if(isName(variables,name))
-			{
-				x = getVariable(variables,name);
-				query.add(x);
-				outcome = "";
-				name = "";
-			}
-			if(isOutcome(x,outcome))
-			{
-				x.setCurrentOutcome(outcome);
-				save_query = outcome;
-				name = "";
-				outcome = "";
-			}
-
-			flag_divider = i;
-
+		Variable x = null;; //saving the query variable
+		String checker = str.substring(2,str.length()-1);
+		String [] splitter = checker.split("[\\|=,]");
+		x = getVariable(variables,splitter[0]);
+		x.setCurrentOutcome(splitter[1]);
+		for (int i = 2; i < splitter.length; i=i+2) {
+			evidence.add(getVariable(variables,splitter[i]));
 		}
-		flag_divider++;
-		//Re_Initializing the variables
-		name = "";
-		outcome = "";
-		Variable vb = null ;
-		//This loop's purpose is to save the evidence variables and their outcomes from the '|' character until the end of the string
-		for (int i = flag_divider+1; i < str.length(); i++) {
-			if(str.charAt(i)!='(' && str.charAt(i)!=')' && str.charAt(i)!=',' && str.charAt(i)!= '=')
-			{	
-				name+=str.charAt(i);
-				outcome += str.charAt(i);
-			}
-			if(isName(variables,name))
+		int iterator = 0;
+		for (int i = 3; i < splitter.length; i+=2) {
+			if(splitter[i-1].equals(x.getName()))
 			{
-				vb = getVariable(variables,name);
-				evidence.add(vb);
-				outcome = "";
-				name = "";
+				if(splitter[i].equals(x.current_outcome))
+				{
+					arr[0]=1;
+					return true;
+				}
+				else
+					return true;
 			}
-			if(isOutcome(vb,outcome))
-			{
-				vb.setCurrentOutcome(outcome);
-				name = "";
-				outcome = "";
+			else {
+				evidence.get(iterator).setCurrentOutcome(splitter[i]);
+				iterator++;
 			}
 		}
+
+		query.add(x);
 		//saving the query's parent to check if the evidence is equal to the parents, so we can get the probability from the CPT with no calculation
 		Linked_List<Variable> query_parents = getCPT(bayesian_network,x.getName()).given;
 		Linked_List<Variable> p = query_parents;
@@ -156,7 +126,9 @@ public class MyHeuristic {
 				hidden.add(variables.get(i));
 			}
 		}
+		return false;
 	}
+
 
 	//This function returns all of variable's CPT
 	public static ArrayList<CPT> getAllCPT(ArrayList<CPT> bayesian_network,ArrayList<Variable> variables)
@@ -349,7 +321,9 @@ public class MyHeuristic {
 		ArrayList<Variable> query = new ArrayList<>();//saving the query variable
 		ArrayList<Variable> evidence = new ArrayList<>(); //saving the evidence variables
 		ArrayList<Variable> hidden = new ArrayList<>(); //saving the hidden parameters
-		PreProcess(str, query, evidence, hidden, variables, bayesian_network);
+		boolean flag = PreProcess(str,arr,query, evidence, hidden, variables, bayesian_network); //checks if query is in the evidence
+		if(flag)
+			return arr;
 		//checks if the query is already in the table
 		{
 			ArrayList<Variable> union = new ArrayList<Variable>(evidence);

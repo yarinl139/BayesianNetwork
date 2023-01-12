@@ -1,10 +1,11 @@
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class SimpleDeduction {
 	//This function's goal is to search over all of the variable's outcome and their parents (P(A1,A2,A3...An))
 	public static double Calculate(double []arr, Variable query, ArrayList<Variable> evidence, ArrayList<Variable> hidden ,ArrayList<Variable> variables,ArrayList<CPT> bayesian_network)
 	{
-		
+
 		ArrayList<String> outcomes;
 		double result=1;
 		for (int i = 0; i < variables.size(); i++) {
@@ -67,71 +68,63 @@ public class SimpleDeduction {
 		}
 		return null;
 	}
-
 	//the following code is complicated, we are using the simple conclusion(which is not that simple in code)
 	public static double[] Deduction(ArrayList<Variable> variables,String str,ArrayList<CPT> bayesian_network) { // Using simple deduction algorithm
+		//Declaring an array of size 3
+		//arr[0] will hold the answer, arr[1] will hold the number of additions ,arr[2] will hold the number of multiplications
+		double [] arr = new double [3];
+
 		Variable query = null;; //saving the query variable
 		ArrayList<Variable> evidence = new ArrayList<>(); //saving the evidence variables
 		ArrayList<Variable> hidden = new ArrayList<>(); //saving the hidden parameters
 		String save_query = ""; //this is used for saving the query outcome for normalization later
-		int flag_divider = 0; //divides the string at char '|'
-		String name = "";
-		String outcome = "";
-
-		//This piece of code is used to get the query parameter and set its outcome
-		for (int i = 1; i < str.length() && str.charAt(i) != '|'; ++i) {
-			if(str.charAt(i)!='(' && str.charAt(i)!=')' && str.charAt(i)!=',' && str.charAt(i)!= '=')
-			{	
-				name+=str.charAt(i);
-				outcome += str.charAt(i);
-			}
-			if(isName(variables,name))
-			{
-				query = getVariable(variables,name);
-				outcome = "";
-				name = "";
-			}
-			if(isOutcome(query,outcome))
-			{
-				query.setCurrentOutcome(outcome);
-				save_query = outcome;
-				name = "";
-				outcome = "";
-			}
-
-			flag_divider = i;
-
+		String checker = str.substring(2,str.length()-1);
+		String [] splitter = checker.split("[\\|=,]");
+		query = getVariable(variables,splitter[0]);
+		query.setCurrentOutcome(splitter[1]);
+		save_query = query.current_outcome;
+		for (int i = 2; i < splitter.length; i=i+2) {
+			evidence.add(getVariable(variables,splitter[i]));
 		}
-		flag_divider++;
-		//Re_Initializing the variables
-		name = "";
-		outcome = "";
-		Variable vb = null ;
-		//This loop's purpose is to save the evidence variables and their outcomes from the '|' character until the end of the string
-		for (int i = flag_divider+1; i < str.length(); i++) {
-			if(str.charAt(i)!='(' && str.charAt(i)!=')' && str.charAt(i)!=',' && str.charAt(i)!= '=')
-			{	
-				name+=str.charAt(i);
-				outcome += str.charAt(i);
-			}
-			if(isName(variables,name))
+		int iterator = 0;
+		for (int i = 3; i < splitter.length; i+=2) {
+			if(splitter[i-1].equals(query.getName()))
 			{
-				vb = getVariable(variables,name);
-				evidence.add(vb);
-				outcome = "";
-				name = "";
+				if(splitter[i].equals(query.current_outcome))
+				{
+					arr[0]=1;
+					return arr;
+				}
+				else
+					return arr;
 			}
-			if(isOutcome(vb,outcome))
-			{
-				vb.setCurrentOutcome(outcome);
-				name = "";
-				outcome = "";
+			else {
+				evidence.get(iterator).setCurrentOutcome(splitter[i]);
+				iterator++;
 			}
 		}
 
-		//Declaring an array of size 3
-		//arr[0] will hold the answer, arr[1] will hold the number of additions ,arr[2] will hold the number of multiplications
-		double [] arr = new double [3];
+		{
+			//checks if the query is already in the table
+			ArrayList<Variable> union = new ArrayList<Variable>(evidence);
+			union.add(query);
+			ArrayList<Variable> check = new ArrayList<>();
+
+			Linked_List<Variable> p  = getCPT(bayesian_network,query.getName()).given;
+			while(p!=null)
+			{
+				check.add(p.getValue());
+				p=p.getNext();
+			}
+			check.sort(null);
+			union.sort(null);
+			if(union.equals(check))
+			{
+				arr[0] = getCPT(bayesian_network,query.getName()).getThisVariableProb();
+				System.out.println(arr[0]);
+				return arr;
+			}
+		}
 
 		//saving the query's parent to check if the evidence is equal to the parents, so we can get the probability from the CPT with no calculation
 		Linked_List<Variable> query_parents = getCPT(bayesian_network,query.getName()).given;
@@ -187,7 +180,7 @@ public class SimpleDeduction {
 			}
 			else
 			{
-				//this piece of code's purpose is to get every hidden variable's outcome from the Generete_Truth_Table methon in class CPT
+				//this piece of code's purpose is to get every hidden variable's outcome from the Generete_Truth_Table method in class CPT
 				int options = 1;
 				Linked_List<Variable> hidden_ln = new Linked_List<Variable>(query);
 				p = hidden_ln;
@@ -238,5 +231,7 @@ public class SimpleDeduction {
 		}
 	}
 
-	
+
+
+
 }

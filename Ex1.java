@@ -152,7 +152,7 @@ public class Ex1 {
 			new_file.createNewFile();
 			FileWriter fw = new FileWriter("output.txt");
 			double []arr;
-			DecimalFormat df = new DecimalFormat("#.#####");
+			DecimalFormat df = new DecimalFormat("0.00000");
 	        df.setRoundingMode(RoundingMode.HALF_EVEN);
 	        
 			while(queries_iterator!=null)
